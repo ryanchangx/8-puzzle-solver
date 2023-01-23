@@ -164,8 +164,12 @@ int main(){
     state* initial_state = new state();
     cout << "Select 1) random, or 2) custom: ";
     cin >> game_choice;
-    if(game_choice == 1)
+    if(game_choice == 1){
         shuffle(initial_state->game);
+        cout << "generated board: " << endl;
+        printgame(initial_state->game);
+        cout << "--------------------" << endl;
+    }
     else{
         string input;
         cout << "Enter board configuration as a string (eg. 867254301): ";
