@@ -4,7 +4,7 @@ using namespace std;
 
 // constants
 
-const int NUM_SHUFFLE = 100;
+const int NUM_SHUFFLE = 65;
 const int OP[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
 array<array<int,3>,3> GOAL = {{{1,2,3},{4,5,6},{7,8,0}}};
 
@@ -77,8 +77,8 @@ int astar_misplaced_tile(const array<array<int,3>,3>& game){
     int num_misplaced = 0;
     for(int i = 0; i < 3; ++i)
         for(int j = 0; j < 3; ++j)
-            if(game[i][j] != GOAL[i][j]) num_misplaced++;
-    return 2 * num_misplaced;  // return 2 * num_misplaced instead of num_misplaced; penalizes harder for having more misplaced tiles
+            if(game[i][j] != GOAL[i][j] && game[i][j] != 0) num_misplaced++;
+    return num_misplaced;
 }
 
 int astar_euclidean_distance(const array<array<int,3>,3>& game){
@@ -86,6 +86,7 @@ int astar_euclidean_distance(const array<array<int,3>,3>& game){
     for(int i = 0; i < 3; ++i){
         for(int j = 0; j < 3; ++j){
             int num = game[i][j];
+            if(num == 0) continue;  // don't count blank as misplaced
             array<int,2> cd1 = get_tile(game,num);
             array<int,2> cd2 = get_tile(GOAL,num);
             edist += abs(cd1[0]-cd2[0]) + abs(cd1[1]-cd2[1]);
@@ -128,7 +129,7 @@ state* search(state* initial_state,int (*heuristic)(const array<array<int,3>,3>&
                 new_game = curr->game;
                 swap(new_game[blanktile[0]][blanktile[1]],new_game[blanktile[0]+OP[i][0]][blanktile[1]+OP[i][1]]);
                 if(!inserted.count(new_game)){
-                    state* new_state = new state(curr, new_game, curr->gn + 1, heuristic(new_game));  // add heuristic in, probably use function pointer
+                    state* new_state = new state(curr, new_game, curr->gn + 1, heuristic(new_game));
                     pq.push(new_state);
                     inserted.insert(new_game);
                 }
@@ -161,26 +162,32 @@ int recover(state* s){
 int main(){
     srand(time(0));
     int game_choice, search_choice;
+    string input;
     state* initial_state = new state();
     cout << "Select 1) random, or 2) custom: ";
     cin >> game_choice;
-    if(game_choice == 1){
-        shuffle(initial_state->game);
-        cout << "generated board: " << endl;
-        printgame(initial_state->game);
-        cout << "--------------------" << endl;
-    }
-    else{
-        string input;
-        cout << "Enter board configuration as a string (eg. 867254301): ";
-        cin >> input;
-        for(int i = 0; i < 3; ++i)
-            for(int j = 0; j < 3; ++j)
-                initial_state->game[i][j] = input[i*3+j] - '0';
+    switch(game_choice){
+        case 1:
+            shuffle(initial_state->game);
+            cout << "generated board: " << endl;
+            printgame(initial_state->game);
+            cout << "--------------------" << endl;
+            break;
+        case 2:
+            cout << "Enter board configuration as a string (eg. 867254301): ";
+            cin >> input;
+            for(int i = 0; i < 3; ++i)
+                for(int j = 0; j < 3; ++j)
+                    initial_state->game[i][j] = input[i*3+j] - '0';
+            break;
+        default:
+            cout << "invalid choice" << endl;
+            exit(0);
+            break;
     }
     cout << "Select 1) uniform cost, 2) a* misplaced tile, 3) a* euclidean: ";
     cin >> search_choice;
-    int (*heuristic)(const array<array<int,3>,3>&);
+    int (*heuristic)(const array<array<int,3>,3>&);  // function pointer to heuristic function
     switch (search_choice){
         case 1:
             heuristic = uniform_cost;
