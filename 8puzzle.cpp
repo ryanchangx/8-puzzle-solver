@@ -81,7 +81,7 @@ int astar_misplaced_tile(const array<array<int,3>,3>& game){
     return num_misplaced;
 }
 
-int astar_euclidean_distance(const array<array<int,3>,3>& game){
+int astar_manhattan_distance(const array<array<int,3>,3>& game){
     int edist = 0;
     for(int i = 0; i < 3; ++i){
         for(int j = 0; j < 3; ++j){
@@ -90,6 +90,20 @@ int astar_euclidean_distance(const array<array<int,3>,3>& game){
             array<int,2> cd1 = get_tile(game,num);
             array<int,2> cd2 = get_tile(GOAL,num);
             edist += abs(cd1[0]-cd2[0]) + abs(cd1[1]-cd2[1]);
+        }
+    }
+    return edist;
+}
+
+int astar_euclidean_distance(const array<array<int,3>,3>& game){
+    int edist = 0;
+    for(int i = 0; i < 3; ++i){
+        for(int j = 0; j < 3; ++j){
+            int num = game[i][j];
+            if(num == 0) continue;  // don't count blank as misplaced
+            array<int,2> cd1 = get_tile(game,num);
+            array<int,2> cd2 = get_tile(GOAL,num);
+            edist += (int)floor(sqrt((cd1[0]-cd2[0])*(cd1[0]-cd2[0]) + (cd1[1]-cd2[1])*(cd1[1]-cd2[1])));
         }
     }
     return edist;
@@ -185,7 +199,7 @@ int main(){
             exit(0);
             break;
     }
-    cout << "Select 1) uniform cost, 2) a* misplaced tile, 3) a* euclidean: ";
+    cout << "Select 1) uniform cost, 2) a* misplaced tile, 3) a* manhattan, 4) a* euclidean: ";
     cin >> search_choice;
     int (*heuristic)(const array<array<int,3>,3>&);  // function pointer to heuristic function
     switch (search_choice){
@@ -196,6 +210,9 @@ int main(){
             heuristic = astar_misplaced_tile;
             break;
         case 3:
+            heuristic = astar_manhattan_distance;
+            break;
+        case 4: 
             heuristic = astar_euclidean_distance;
             break;
         default:
